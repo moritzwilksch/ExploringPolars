@@ -34,23 +34,23 @@ def extract_cashtags(dataf: pl.DataFrame) -> pl.DataFrame:
     return dataf.with_column(pl.col("tweet").apply(get_cashtags))
 
 
-#%%
-clean: pl.DataFrame = df.pipe(fix_datetime).pipe(clean_tweet).pipe(clean_vector)
-# clean = clean.shrink_to_fit()
-
-
-#%%
 def list_from_strlist(s: str) -> int:
     return len(s.strip("[]").replace("'", "").split(","))
 
 
-# count n_cashtags
-clean = clean.with_column(pl.col("cashtags").apply(list_from_strlist).alias("n_cashtags")).collect()
+#%%
+clean: pl.DataFrame = (
+    df.pipe(fix_datetime)
+    .pipe(clean_tweet)
+    .pipe(clean_vector)
+    .with_column(pl.col("cashtags").apply(list_from_strlist).alias("n_cashtags"))
+    .collect()
+).lazy()
 
 #%%
-clean.select(("cashtags", "n_cashtags"))
+clean.select(("cashtags", "n_cashtags")).collect()
 
 #%%
 clean.with_column(pl.col("username").cast(pl.Categorical).alias("username_cat")).groupby(
     "username_cat"
-).agg(pl.col("id").n_unique()).sort("id_n_unique")
+).agg(pl.col("id").n_unique()).sort("id_n_unique").collect()
