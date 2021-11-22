@@ -57,4 +57,7 @@ res.collect()
 #%%
 nct_peruser = clean.groupby("username").agg(pl.col("n_cashtags").mean()).sort("n_cashtags_mean")
 
-nct_peruser.select(['n_cashtags_mean']).quantile(0.95).collect()
+nct_peruser.select(["n_cashtags_mean"]).quantile(0.95).collect()
+
+#%%
+clean.select("tweet").with_column(pl.col("tweet").str.replace("tesla", "XXX")).collect()
