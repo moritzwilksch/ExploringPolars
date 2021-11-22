@@ -4,12 +4,6 @@ import re
 
 re_cashtags = re.compile(r"\$[A-Z]+")
 
-df: pl.DataFrame = pl.scan_csv("data/TSLA_tweets.csv")
-# df: pl.DataFrame = pl.read_csv("data/TSLA_tweets.csv")
-
-#%%
-df.head(1)
-
 #%%
 def fix_datetime(dataf: pl.DataFrame) -> pl.DataFrame:
     return dataf.with_column(
@@ -39,18 +33,28 @@ def list_from_strlist(s: str) -> int:
 
 
 #%%
-clean: pl.DataFrame = (
-    df.pipe(fix_datetime)
-    .pipe(clean_tweet)
-    .pipe(clean_vector)
-    .with_column(pl.col("cashtags").apply(list_from_strlist).alias("n_cashtags"))
-    .collect()
-).lazy()
+RERUN_CLEAN_FROM_CSV = False
+
+if RERUN_CLEAN_FROM_CSV:
+    df: pl.DataFrame = pl.scan_csv("data/TSLA_tweets.csv")
+    clean: pl.DataFrame = (
+        df.pipe(fix_datetime)
+        .pipe(clean_tweet)
+        .pipe(clean_vector)
+        .with_column(pl.col("cashtags").apply(list_from_strlist).alias("n_cashtags"))
+        .collect()
+    )
+    clean.to_parquet("data/clean_tweets.parquet")
+    clean: pl.LazyFrame = clean.lazy()
+else:
+    clean: pl.LazyFrame = pl.scan_parquet("data/clean_tweets.parquet")
+
 
 #%%
-clean.select(("cashtags", "n_cashtags")).collect()
+res = clean.groupby("username").agg(pl.col("id").n_unique()).sort("id_n_unique")
+res.collect()
 
 #%%
-clean.with_column(pl.col("username").cast(pl.Categorical).alias("username_cat")).groupby(
-    "username_cat"
-).agg(pl.col("id").n_unique()).sort("id_n_unique").collect()
+nct_peruser = clean.groupby("username").agg(pl.col("n_cashtags").mean()).sort("n_cashtags_mean")
+
+nct_peruser.select(['n_cashtags_mean']).quantile(0.95).collect()
