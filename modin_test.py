@@ -1,5 +1,6 @@
 #%%
 import os
+
 os.environ["MODIN_ENGINE"] = "ray"
 import modin.pandas as pd
 
@@ -27,8 +28,8 @@ keep_cols = [
 
 def fix_dtypes(data: pd.DataFrame) -> pd.DataFrame:
     print(f"[PROCESSING] Fixing dtypes...")
-    data = data.assign(created_at=pd.to_datetime(data.date + " " + data.time))
-    data = data.drop(["date", "time"], axis=1)
+    data = data.assign(date=pd.to_datetime(data.date), time=pd.to_datetime(data.time))
+    # data = data.drop(["date", "time"], axis=1)
 
     string_cols = ["username", "name", "tweet", "link"]
     data[string_cols] = data[string_cols].astype("string")
@@ -63,15 +64,9 @@ def drop_dupes(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-
-
-
 #%%
 
-df = pd.read_csv("TSLA_tweets.csv")
-
-
-
+df = pd.read_csv("TSLA_tweets.csv", parse_dates=['date', 'time'])
 
 
 #%%
@@ -79,6 +74,8 @@ df = pd.read_csv("TSLA_tweets.csv")
 clean: pd.DataFrame = (
     df.pipe(fix_dtypes)
     .pipe(drop_dupes)
-    .pipe(clean_object_cols)
+    # .pipe(clean_object_cols)
     # .query("language == 'en'") # filtered later
 )
+
+#%%
