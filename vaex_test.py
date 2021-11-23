@@ -1,8 +1,9 @@
 #%%
-import os
-os.environ["MODIN_ENGINE"] = "ray"
-import modin.pandas as pd
+import vaex
 
+
+#%%
+df = vaex.read_csv("TSLA_tweets.csv")  # OOM
 
 #%%
 
@@ -25,7 +26,7 @@ keep_cols = [
 ]
 
 
-def fix_dtypes(data: pd.DataFrame) -> pd.DataFrame:
+def fix_dtypes(data: dd.DataFrame) -> dd.DataFrame:
     print(f"[PROCESSING] Fixing dtypes...")
     data = data.assign(created_at=pd.to_datetime(data.date + " " + data.time))
     data = data.drop(["date", "time"], axis=1)
@@ -37,7 +38,7 @@ def fix_dtypes(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def clean_object_cols(data: pd.DataFrame) -> pd.DataFrame:
+def clean_object_cols(data: dd.DataFrame) -> dd.DataFrame:
     print(f"[PROCESSING] Cleaning obj-cols...")
     data["hashtags"] = data.hashtags.apply(
         lambda x: ", ".join(x.split("', '")).strip("[']")
@@ -52,7 +53,7 @@ def clean_object_cols(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def drop_dupes(data: pd.DataFrame) -> pd.DataFrame:
+def drop_dupes(data: dd.DataFrame) -> dd.DataFrame:
     """Drop dupes."""
     len_before = len(data)
     data = data.drop_duplicates(subset="id")
@@ -67,16 +68,16 @@ def drop_dupes(data: pd.DataFrame) -> pd.DataFrame:
 
 
 #%%
-
-df = pd.read_csv("TSLA_tweets.csv")
+%%time
+df = dd.read_csv("TSLA_tweets.csv")
 
 
 
 
 
 #%%
-
-clean: pd.DataFrame = (
+%%time
+clean: dd.DataFrame = (
     df.pipe(fix_dtypes)
     .pipe(drop_dupes)
     .pipe(clean_object_cols)
