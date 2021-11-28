@@ -1,3 +1,5 @@
+*.dirlock
+*.lock
 *.csv
 *.parquet
 

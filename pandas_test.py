@@ -1,4 +1,5 @@
 # %%
+from time import time
 import pandas as pd
 
 root_path = "./"
@@ -40,17 +41,24 @@ def fix_dtypes(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def clean_object_cols(data: pd.DataFrame) -> pd.DataFrame:
-    print(f"[PROCESSING] Cleaning obj-cols...")
-    data["hashtags"] = data.hashtags.apply(
-        lambda x: ", ".join(x.split("', '")).strip("[']")
-    ).astype("string")
-    data.loc[data.hashtags.str.len() == 0, "hashtags"] = pd.NA
+# def clean_object_cols(data: pd.DataFrame, colname) -> pd.DataFrame:
+#     print(f"[PROCESSING] Cleaning obj-col {colname}...")
 
+#     data[colname] = data[colname].str.split("', '").str.join(", ").str.strip("[']")
+#     data.loc[data[colname].str.len() == 0, colname] = pd.NA
+
+#     return data
+
+def clean_obj_cols(data):
     data["cashtags"] = data.cashtags.apply(
         lambda x: ", ".join(x.split("', '")).strip("[']")
     ).astype("string")
     data.loc[data.cashtags.str.len() == 0, "cashtags"] = pd.NA
+
+    data["hashtags"] = data.hashtags.apply(
+        lambda x: ", ".join(x.split("', '")).strip("[']")
+    ).astype("string")
+    data.loc[data.hashtags.str.len() == 0, "hashtags"] = pd.NA
 
     return data
 
@@ -70,11 +78,13 @@ def drop_dupes(data: pd.DataFrame) -> pd.DataFrame:
 clean: pd.DataFrame = (
     df.pipe(fix_dtypes)
     .pipe(drop_dupes)
-    .pipe(clean_object_cols)
+    .pipe(clean_obj_cols)
+    .pipe(clean_obj_cols)
     # .query("language == 'en'") # filtered later
 )
 
 #%%
-from joblib import Parallel, delayed
+%%time
+df.groupby("username")['id'].nunique()
 
-pardf =
+# clean_obj_col_old(df.copy())

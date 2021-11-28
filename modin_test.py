@@ -1,7 +1,9 @@
 #%%
 import os
 
-os.environ["MODIN_ENGINE"] = "ray"
+# os.environ["MODIN_ENGINE"] = "ray"
+import ray
+ray.init()
 import modin.pandas as pd
 
 
@@ -52,6 +54,13 @@ def clean_object_cols(data: pd.DataFrame) -> pd.DataFrame:
 
     return data
 
+# def clean_object_cols(data: pd.DataFrame, colname) -> pd.DataFrame:
+#     print(f"[PROCESSING] Cleaning obj-col {colname}...")
+
+#     data[colname] = data[colname].str.split("', '").str.join(", ").str.strip("[']")
+#     data.loc[data[colname].str.len() == 0, colname] = pd.NA
+
+#     return data
 
 def drop_dupes(data: pd.DataFrame) -> pd.DataFrame:
     """Drop dupes."""
@@ -74,8 +83,11 @@ df = pd.read_csv("TSLA_tweets.csv", parse_dates=['date', 'time'])
 clean: pd.DataFrame = (
     df.pipe(fix_dtypes)
     .pipe(drop_dupes)
-    # .pipe(clean_object_cols)
+    .pipe(clean_object_cols)
+    .pipe(clean_object_cols)
     # .query("language == 'en'") # filtered later
 )
 
 #%%
+%%time
+clean.groupby("username")['id'].nunique()

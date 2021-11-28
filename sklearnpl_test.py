@@ -56,12 +56,14 @@ def fix_dtypes(data: pd.DataFrame, dtype) -> pd.DataFrame:
 
 #     return data
 
+import numba
+
+
+
 def clean_obj_col(data, col):
     print("Cleaning obj cols")
-    data[col].apply(
-        lambda x: ", ".join(x.str.split("', '")).strip("[']")
-    ).astype("string")
-    data.loc[data[col].str.len() == 0, col] = pd.NA
+    data[col].apply(strclean).astype("string")
+    data.loc[data[col].apply(len) == 0, col] = pd.NA
     return data
 
 
@@ -88,11 +90,34 @@ pl = Pipeline([
     ], remainder='passthrough', n_jobs=-1)),
     ("setcols1", FunctionTransformer(lambda x: pd.DataFrame(x, columns=df.columns))),
     ("fixobjtypes", ColumnTransformer([
-        ("clean_objcols1", FunctionTransformer(clean_obj_col), ["hashtags"]),
-        ("clean_objcols2", FunctionTransformer(clean_obj_col), ["cashtags"]),
+        ("clean_objcols1", FunctionTransformer(clean_obj_col, kw_args=dict(col="hashtags")), ["hashtags"]),
+        ("clean_objcols2", FunctionTransformer(clean_obj_col, kw_args=dict(col="cashtags")), ["cashtags"]),
     ], remainder='passthrough', n_jobs=-1)),
     ("setcols2", FunctionTransformer(lambda x: pd.DataFrame(x, columns=df.columns))),
 ])
 
 #%%
-pl.fit_transform(df)
+# pl.fit_transform(df)
+
+#%%
+clean_obj_col(df.copy(), "cashtags")
+
+#%%
+%%time
+@numba.njit()
+def strclean(x: str) -> str:
+    return ", ".join(x.split("', '")).strip("[']")
+strclean("dafs', 'sadf")
+
+#%%
+df['cashtags'].apply(strclean)
+
+#%%
+from joblib import Parallel, delayed
+#%%
+%%time
+Parallel(n_jobs=-1)(delayed(strclean)(x) for x in df['cashtags'])
+
+#%%
+%%time
+df.cashtags.apply(strclean)

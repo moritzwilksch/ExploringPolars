@@ -1,4 +1,10 @@
 #%%
+if __name__ == '__main__':
+    from dask.distributed import Client
+    client = Client()
+    client
+
+#%%
 import dask
 import dask.dataframe as dd
 import numpy as np
@@ -54,11 +60,12 @@ def clean_object_cols(data: dd.DataFrame) -> dd.DataFrame:
 @dask.delayed
 def drop_dupes(data: dd.DataFrame) -> dd.DataFrame:
     """Drop dupes."""
-    len_before = len(data)
+    print("Dropping dupes")
+    # len_before = len(data)
     data = data.drop_duplicates(subset="id")
-    len_after = len(data)
+    # len_after = len(data)
 
-    print(f"[PROCESSING] Dropped {len_before - len_after} duplicates...")
+    # print(f"[PROCESSING] Dropped {len_before - len_after} duplicates...")
 
     return data
 
@@ -67,20 +74,23 @@ def drop_dupes(data: dd.DataFrame) -> dd.DataFrame:
 
 
 #%%
-%%time
-# df = dd.read_csv("TSLA_tweets.csv", dtype={'place': 'object'})
+# %%time
+df = dd.read_csv("TSLA_tweets.csv", dtype={'place': 'object'})
 # df.to_parquet("TSLA_tweets.parquet", schema="infer")
-df = dd.read_parquet("TSLA_tweets.parquet")
+# df = dd.read_parquet("TSLA_tweets.parquet")
 
 
 
 
 
 #%%
-%%time
+# %%time
 clean: dd.DataFrame = (
     df.pipe(fix_dtypes)
     .pipe(drop_dupes)
     .pipe(clean_object_cols)
     .query("language == 'en'") # filtered later
 ).compute()
+
+#%%
+clean

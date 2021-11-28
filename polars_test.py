@@ -49,7 +49,8 @@ def clean_object_cols(data):
     # ).astype("string")
 
     data = data.with_column(pl.col("hashtags").apply(lambda x: ", ".join(x.split("', '")).strip("[']")).cast(pl.Utf8))
-    data = data.with_columns(pl.col("hashtags").set(pl.col("hashtags").str.len() == 0, np.nan))
+    # data = data.filter(pl.col("hashtags").apply(lambda x: len(x)) == 0).select("hashtags").set(np.nan)
+    data.with_column(pl.when(pl.col("hashtags").eq(0), np.nan).otherwise(pl.col("hashtags")))
 
     # data.loc[data.hashtags.str.len() == 0, "hashtags"] = pd.NA
 
