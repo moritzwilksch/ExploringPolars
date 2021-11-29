@@ -1,13 +1,14 @@
 #%%
 import dask
-import dask.dataframe as dd
 import numpy as np
 
-if __name__ == "__main__":
-    from dask.distributed import Client
 
-    client = Client()
-    client
+from dask.distributed import Client
+
+client = Client()
+client
+
+import dask.dataframe as dd
 
 #%%
 
