@@ -5,7 +5,7 @@ import numpy as np
 
 from dask.distributed import Client
 
-client = Client()
+client = Client(processes=False)
 client
 
 import dask.dataframe as dd
@@ -36,8 +36,9 @@ keep_cols = [
 
 @dask.delayed
 def fix_dtypes(data: dd.DataFrame) -> dd.DataFrame:
-    print(f"[PROCESSING] Fixing dtypes...")
-    data = data.assign(created_at=dd.to_datetime(data.date + " " + data.time))
+    print(f"[PROCESSING] Fixing dtypes... {type(data)}")
+    # data = data.assign(created_at=dd.to_datetime(data.date + " " + data.time))
+    # data["created_at"] = dd.to_datetime(data['date'] + " " + data['time'])
     data = data.drop(["date", "time"], axis=1)
 
     string_cols = ["username", "name", "tweet", "link"]
@@ -87,9 +88,10 @@ df = dd.read_csv("TSLA_tweets.csv", dtype={"place": "object"})
 clean: dd.DataFrame = (
     df.pipe(fix_dtypes)
     .pipe(drop_dupes)
-    .pipe(clean_object_cols)
+    .pipe(clean_obj_cols)
     .query("language == 'en'")  # filtered later
 ).compute()
 
 #%%
-clean
+df = dd.read_csv("TSLA_tweets.csv", dtype={"place": "object"})
+df.groupby("username")['id'].count().compute(scheduler="threads")
