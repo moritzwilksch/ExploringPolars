@@ -24,7 +24,7 @@ keep_cols = [
 ]
 
 #%%
-%%time
+# %%time
 df = pd.read_csv(root_path + f"{ticker}_tweets.csv", usecols=keep_cols)
 
 
@@ -49,14 +49,15 @@ def fix_dtypes(data: pd.DataFrame) -> pd.DataFrame:
 
 #     return data
 
+
 def clean_obj_cols(data):
     data["cashtags"] = data.cashtags.apply(
-        lambda x: ", ".join(x.split("', '")).strip("[']")
+        lambda x: ", ".join(x.split("', '")).strip("[']") if x is not pd.NA else ""
     ).astype("string")
     data.loc[data.cashtags.str.len() == 0, "cashtags"] = pd.NA
 
     data["hashtags"] = data.hashtags.apply(
-        lambda x: ", ".join(x.split("', '")).strip("[']")
+        lambda x: ", ".join(x.split("', '")).strip("[']") if x is not pd.NA else ""
     ).astype("string")
     data.loc[data.hashtags.str.len() == 0, "hashtags"] = pd.NA
 
@@ -73,8 +74,9 @@ def drop_dupes(data: pd.DataFrame) -> pd.DataFrame:
 
     return data
 
+
 #%%
-%%time
+# %%time
 clean: pd.DataFrame = (
     df.pipe(fix_dtypes)
     .pipe(drop_dupes)
@@ -84,7 +86,7 @@ clean: pd.DataFrame = (
 )
 
 #%%
-%%time
-df.groupby("username")['id'].nunique()
+# %%time
+df.groupby("username")["id"].nunique()
 
 # clean_obj_col_old(df.copy())

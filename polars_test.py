@@ -69,7 +69,7 @@ def drop_dupes(data):
 
 
 #%%
-clean = (
+clean: pl.DataFrame = (
     df.pipe(fix_dtypes)
     .pipe(drop_dupes)
     .pipe(clean_object_cols)
@@ -80,4 +80,12 @@ print("Done!")
 
 
 #%%
-clean.apply(lambda x: len(x.select("hashtags")))
+clean.with_column(pl.col("hashtags").apply(lambda a: pl.Series(a)))
+
+
+#%%
+x = pl.DataFrame({'a': [1, 2], 'b': [['abc', 'def'], ['ghi', 'jkl']]})
+x.with_column(pl.col('b').cast(pl.Object))
+
+#%%
+clean.select("hashtags").to_dict()['hashtags'].cast(pl.List).apply(len)

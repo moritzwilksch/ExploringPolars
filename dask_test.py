@@ -1,13 +1,15 @@
 #%%
-if __name__ == '__main__':
+import dask
+import dask.dataframe as dd
+import numpy as np
+
+if __name__ == "__main__":
     from dask.distributed import Client
+
     client = Client()
     client
 
 #%%
-import dask
-import dask.dataframe as dd
-import numpy as np
 
 
 #%%
@@ -30,6 +32,7 @@ keep_cols = [
     "link",
 ]
 
+
 @dask.delayed
 def fix_dtypes(data: dd.DataFrame) -> dd.DataFrame:
     print(f"[PROCESSING] Fixing dtypes...")
@@ -42,20 +45,21 @@ def fix_dtypes(data: dd.DataFrame) -> dd.DataFrame:
     data["language"] = data["language"].astype("category")
     return data
 
-@dask.delayed
-def clean_object_cols(data: dd.DataFrame) -> dd.DataFrame:
-    print(f"[PROCESSING] Cleaning obj-cols...")
-    data["hashtags"] = data.hashtags.apply(
-        lambda x: ", ".join(x.split("', '")).strip("[']")
-    ).astype("string")
-    data.loc[data.hashtags.str.len() == 0, "hashtags"] = np.nan
 
+@dask.delayed
+def clean_obj_cols(data):
     data["cashtags"] = data.cashtags.apply(
-        lambda x: ", ".join(x.split("', '")).strip("[']")
+        lambda x: ", ".join(x.split("', '")).strip("[']") if x is not pd.NA else ""
     ).astype("string")
-    data.loc[data.cashtags.str.len() == 0, "cashtags"] = np.nan
+    data.loc[data.cashtags.str.len() == 0, "cashtags"] = pd.NA
+
+    data["hashtags"] = data.hashtags.apply(
+        lambda x: ", ".join(x.split("', '")).strip("[']") if x is not pd.NA else ""
+    ).astype("string")
+    data.loc[data.hashtags.str.len() == 0, "hashtags"] = pd.NA
 
     return data
+
 
 @dask.delayed
 def drop_dupes(data: dd.DataFrame) -> dd.DataFrame:
@@ -70,17 +74,11 @@ def drop_dupes(data: dd.DataFrame) -> dd.DataFrame:
     return data
 
 
-
-
-
 #%%
 # %%time
-df = dd.read_csv("TSLA_tweets.csv", dtype={'place': 'object'})
+df = dd.read_csv("TSLA_tweets.csv", dtype={"place": "object"})
 # df.to_parquet("TSLA_tweets.parquet", schema="infer")
 # df = dd.read_parquet("TSLA_tweets.parquet")
-
-
-
 
 
 #%%
@@ -89,7 +87,7 @@ clean: dd.DataFrame = (
     df.pipe(fix_dtypes)
     .pipe(drop_dupes)
     .pipe(clean_object_cols)
-    .query("language == 'en'") # filtered later
+    .query("language == 'en'")  # filtered later
 ).compute()
 
 #%%
