@@ -85,8 +85,8 @@ df = pd.read_csv("TSLA_tweets.csv", parse_dates=["date", "time"])
 clean: pd.DataFrame = (
     df.pipe(fix_dtypes)
     .pipe(drop_dupes)
-    .pipe(clean_object_cols)
-    .pipe(clean_object_cols)
+    .pipe(clean_obj_cols)
+    .pipe(clean_obj_cols)
     # .query("language == 'en'") # filtered later
 )
 
