@@ -88,8 +88,7 @@ print("Done!")
 
 
 #%%
-# clean.with_column(pl.col("hashtags").cast(pl.List).len())
-dir(clean.select("hashtags"))
+clean.with_column(pl.col("hashtags").apply(lambda x: pl.Series(x)))
 
 
 #%%
@@ -97,4 +96,4 @@ x = pl.DataFrame({'a': [1, 2], 'b': [['abc', 'def'], ['ghi', 'jkl']]})
 x.with_column(pl.col('b').cast(pl.Object))
 
 #%%
-clean.select("hashtags").apply(lambda x: pl.Series(list(x)))
+clean.select("hashtags").apply(lambda x: pl.Series(x))

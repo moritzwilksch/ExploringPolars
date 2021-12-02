@@ -25,8 +25,10 @@ keep_cols = [
 
 #%%
 # %%time
-df = pd.read_csv(root_path + f"{ticker}_tweets.csv", usecols=keep_cols)
-
+if False:
+    df = pd.read_csv(root_path + f"{ticker}_tweets.csv", usecols=keep_cols)
+else:
+    df = pd.read_parquet(root_path + f"{ticker}_tweets_clean.parquet", columns=keep_cols)
 
 #%%
 def fix_dtypes(data: pd.DataFrame) -> pd.DataFrame:
@@ -87,6 +89,6 @@ clean: pd.DataFrame = (
 
 #%%
 # %%time
-df.groupby("username")["id"].nunique()
+df.groupby("username")["id"].nunique().sort_values()
 
 # clean_obj_col_old(df.copy())
