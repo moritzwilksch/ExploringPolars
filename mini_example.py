@@ -35,5 +35,9 @@ clean.map(
 #%%
 clean.collect().groupby("sex").pivot("time", "tip_pct").mean()
 
+
+
 #%%
-dir(clean.collect().select("time"))
+pl.read_parquet("https://github.com/unsupervisedlearner1123/Duke-Datathon-2021/raw/main/20_intermediate_files/W2focusdata.parquet")
+
+#%%
